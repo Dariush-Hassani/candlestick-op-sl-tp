@@ -1,0 +1,57 @@
+export const colors = () => {
+  return {
+    grid: '#222631',
+    background: '#171b26',
+    candleInfoText: '#b2b5be',
+    candleInfoTextUp: '#089981',
+    candleInfoTextDown: '#e13443',
+    tickColor: '#b2b5be',
+    downCandlesStroke: '#e13443',
+    downCandlesFill: '#e13443',
+    downCandlesTail: '#e13443',
+    upCandlesStroke: '#089981',
+    upCandlesFill: '#089981',
+    upCandlesTail: '#089981',
+    selectorLine: 'rgba(178,181,190,0.5)',
+    selectorLableBackground: '#2a2e39',
+    selectorLabelText: '#b2b5be',
+    short: '#fff',
+    shortStroke: '#fff',
+    long: '#fff',
+    longStroke: '#fff',
+    sl: '#F9DB04',
+    slStroke: '#F9DB04',
+    tp: '#04F5F9',
+    tpStroke: '#04F5F9',
+  };
+};
+
+export const config = (width, height) => {
+  return {
+    width: width,
+    height: height,
+    candleTailWidth: 1,
+    paddingLeft: 25,
+    paddingTop: 10,
+    paddingBottom: 30,
+    yPaddingScaleTop: 0.04,
+    yPaddingScaleBottom: 0.03,
+    xTicksTransform: 10,
+    xLabelWidth: 150,
+    xLabelHeight: 25,
+    xLabelFontSize: 12,
+    yLabelHeight: 25,
+    yLabelFontSize: 12,
+    decimal: 3,
+    charWidth: 7.8,
+    selectoreStrokeDashArray: '2,2',
+    timeFormat: "%a %d %b '%y %H:%M",
+    //calcualte after set data//
+    infoTextWidth: undefined,
+    infoTextWidthMeta: undefined,
+    yLabelWidth: undefined,
+    paddingRight: undefined,
+    svgWidth: undefined,
+    svgHeight: undefined,
+  };
+};
