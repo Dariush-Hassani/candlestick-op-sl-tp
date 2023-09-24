@@ -15,7 +15,7 @@ class CandleStickChart {
   #candleLockerWidth;
   #candleLockerWidthDate;
   #filteredData;
-  #mode = 'normal';
+  #mode = 'zoom';
   #isMouseDown = false;
   #zoomPoint1;
   #zoomPoint2;
@@ -797,16 +797,33 @@ class CandleStickChart {
     if (zoomBox2) zoomBox2.remove();
 
     let minMaxZoom = d3.extent([this.#zoomPoint1, this.#zoomPoint2]);
-
+    if (minMaxZoom[1] - minMaxZoom[0] < 5) {
+      minMaxZoom[0] -= 5;
+      minMaxZoom[1] += 5;
+    }
     let leftDate = parseDate(this.#xScaleFunc.invert(minMaxZoom[0]));
     let rightDate = parseDate(this.#xScaleFunc.invert(minMaxZoom[1]));
 
     let filteredData = this.data.filter((x) => {
-      return parseDate(x.date) > leftDate && parseDate(x.date) < rightDate;
+      return (
+        parseDate(x.date).getTime() >
+          leftDate.getTime() - this.#candleWidthDate &&
+        parseDate(x.date).getTime() <
+          rightDate.getTime() + this.#candleWidthDate
+      );
     });
 
-    this.#zoomRange1 = parseDate(this.#xScaleFunc.invert(minMaxZoom[0]));
-    this.#zoomRange2 = parseDate(this.#xScaleFunc.invert(minMaxZoom[1]));
+    let oldZoomRange1 = this.#minMaxDate[0];
+    let oldZoomRange2 = this.#minMaxDate[1];
+
+    let newZoomRange1 = parseDate(this.#xScaleFunc.invert(minMaxZoom[0]));
+    let newZoomRange2 = parseDate(this.#xScaleFunc.invert(minMaxZoom[1]));
+
+    this.#zoomFactor =
+      (oldZoomRange2 - oldZoomRange1) / (newZoomRange2 - newZoomRange1);
+
+    this.#zoomRange1 = newZoomRange1;
+    this.#zoomRange2 = newZoomRange2;
 
     this.#filteredData = filteredData;
     this.draw();
@@ -1078,31 +1095,23 @@ class CandleStickChart {
       newThis.#zoomRange1 = left;
       newThis.#zoomRange2 = right;
 
-      console.log(newThis.#zoomFactor);
-      console.log(width);
-      console.log(left);
-      console.log(right);
-
-      // d3.select(`#${newThis.#objectIDs.candleContainerId}`)
-      //   .selectAll()
-      //   .data([1])
-      //   .enter()
-      //   .append('rect')
-      //   .attr('stroke', 'red')
-      //   .attr('x', remain)
-      //   .attr('height', window.innerHeight)
-      //   .attr('width', newWidth)
-      //   .attr('fill', 'none');
-
       let filteredData = newThis.data.filter((x) => {
-        return parseDate(x.date) > left && parseDate(x.date) < right;
+        return (
+          parseDate(x.date).getTime() > left - newThis.#candleWidthDate &&
+          parseDate(x.date).getTime() < right + newThis.#candleWidthDate
+        );
       });
 
       newThis.#filteredData = filteredData;
 
       newThis.draw();
     });
-    d3.select('svg').call(zoom);
+    d3.select('svg')
+      .call(zoom)
+      .on('mousedown.zoom', null)
+      .on('touchstart.zoom', null)
+      .on('touchmove.zoom', null)
+      .on('touchend.zoom', null);
   }
 }
 
