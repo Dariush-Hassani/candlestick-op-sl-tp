@@ -15,7 +15,7 @@ class CandleStickChart {
   #candleLockerWidth;
   #candleLockerWidthDate;
   #filteredData;
-  #mode = 'zoom';
+  #mode = 'pan';
   #isMouseDown = false;
   #zoomPoint1;
   #zoomPoint2;
@@ -23,6 +23,7 @@ class CandleStickChart {
   #zoomRange2;
   #minMaxDate;
   #zoomFactor = 1;
+  #panTargetDate;
 
   constructor(width, height, data, id) {
     this.#colors = colors();
@@ -36,8 +37,8 @@ class CandleStickChart {
     this.#setObjectIDs();
     let minMaxDate = d3.extent(data.map((x) => parseDate(x.date)));
     this.#minMaxDate = minMaxDate;
-    this.#zoomRange1 = minMaxDate[0];
-    this.#zoomRange2 = minMaxDate[1];
+    this.#zoomRange1 = minMaxDate[0].getTime();
+    this.#zoomRange2 = minMaxDate[1].getTime();
     this.#calculateCandleWidthDate();
   }
 
@@ -797,12 +798,13 @@ class CandleStickChart {
     if (zoomBox2) zoomBox2.remove();
 
     let minMaxZoom = d3.extent([this.#zoomPoint1, this.#zoomPoint2]);
-    if (minMaxZoom[1] - minMaxZoom[0] < 5) {
-      minMaxZoom[0] -= 5;
-      minMaxZoom[1] += 5;
-    }
+
     let leftDate = parseDate(this.#xScaleFunc.invert(minMaxZoom[0]));
     let rightDate = parseDate(this.#xScaleFunc.invert(minMaxZoom[1]));
+
+    if (leftDate - rightDate === 0) {
+      return;
+    }
 
     let filteredData = this.data.filter((x) => {
       return (
@@ -821,6 +823,32 @@ class CandleStickChart {
 
     this.#zoomFactor =
       (oldZoomRange2 - oldZoomRange1) / (newZoomRange2 - newZoomRange1);
+
+    this.#zoomRange1 = newZoomRange1;
+    this.#zoomRange2 = newZoomRange2;
+
+    this.#filteredData = filteredData;
+    this.draw();
+  }
+
+  #handlePan(location) {
+    let dateWidth = this.#zoomRange2 - this.#zoomRange1;
+    let width = document.getElementById(
+      `${this.#objectIDs.candleContainerId}`
+    ).width.baseVal.value;
+
+    let fraction = location / width;
+
+    let newZoomRange1 = this.#panTargetDate - (fraction * dateWidth);
+    let newZoomRange2 = newZoomRange1 + dateWidth;
+
+
+    let filteredData = this.data.filter((x) => {
+      return (
+        parseDate(x.date).getTime() > newZoomRange1 - this.#candleWidthDate &&
+        parseDate(x.date).getTime() < newZoomRange2 + this.#candleWidthDate
+      );
+    });
 
     this.#zoomRange1 = newZoomRange1;
     this.#zoomRange2 = newZoomRange2;
@@ -902,9 +930,11 @@ class CandleStickChart {
         //y label
         thisProxy.#yLabelHandler(d, location.y);
 
-        if (thisProxy.#isMouseDown) {
+        if (thisProxy.#isMouseDown && thisProxy.#mode === 'zoom') {
           thisProxy.#zoomPoint2 = location.x;
           thisProxy.#handleZoomBox();
+        } else if (thisProxy.#isMouseDown && thisProxy.#mode === 'pan') {
+          thisProxy.#handlePan(location.x);
         }
       }
     );
@@ -935,9 +965,13 @@ class CandleStickChart {
     d3.select(`#${this.#objectIDs.candleContainerId}`).on(
       'mousedown',
       function (e, d) {
-        let location = getCursorPoint(thisProxy.#objectIDs.svgId, e);
         thisProxy.#isMouseDown = true;
-        thisProxy.#zoomPoint1 = location.x;
+        let location = getCursorPoint(thisProxy.#objectIDs.svgId, e);
+        if (thisProxy.#mode === 'zoom') {
+          thisProxy.#zoomPoint1 = location.x;
+        } else if (thisProxy.#mode === 'pan') {
+          thisProxy.#panTargetDate = (thisProxy.#xScaleFunc.invert(location.x)).getTime();
+        }
       }
     );
 
@@ -945,9 +979,13 @@ class CandleStickChart {
       'mouseup',
       function (e, d) {
         thisProxy.#isMouseDown = false;
-        thisProxy.#handleZoom();
-        thisProxy.#zoomPoint1 = 0;
-        thisProxy.#zoomPoint2 = 0;
+        if (thisProxy.#mode === 'zoom') {
+          thisProxy.#handleZoom();
+          thisProxy.#zoomPoint1 = 0;
+          thisProxy.#zoomPoint2 = 0;
+        } else if (thisProxy.#mode === 'pan') {
+          thisProxy.#panTargetDate = 0;
+        }
       }
     );
   }
