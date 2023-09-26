@@ -422,12 +422,12 @@ class CandleStickChart {
         'points',
         (d) =>
           `${
-            this.#xScaleFunc(parseDate(d.date)) - this.#candleWidth / 1.2
+            this.#xScaleFunc(parseDate(d.date)) - this.#candleWidth / 2
           },${this.#yScaleFunc(d.short)} ${
-            this.#xScaleFunc(parseDate(d.date)) + this.#candleWidth / 1.2
+            this.#xScaleFunc(parseDate(d.date)) + this.#candleWidth / 2
           },${this.#yScaleFunc(d.short)} ${this.#xScaleFunc(
             parseDate(d.date)
-          )},${this.#yScaleFunc(d.short) + this.#candleWidth * 1.2}`
+          )},${this.#yScaleFunc(d.short) + this.#candleWidth / 1.5}`
       )
       .attr('fill', this.#colors.short)
       .attr('stroke', this.#colors.shortStroke)
@@ -448,12 +448,12 @@ class CandleStickChart {
         'points',
         (d) =>
           `${
-            this.#xScaleFunc(parseDate(d.date)) - this.#candleWidth / 1.2
+            this.#xScaleFunc(parseDate(d.date)) - this.#candleWidth / 2
           },${this.#yScaleFunc(d.long)} ${
-            this.#xScaleFunc(parseDate(d.date)) + this.#candleWidth / 1.2
+            this.#xScaleFunc(parseDate(d.date)) + this.#candleWidth / 2
           },${this.#yScaleFunc(d.long)} ${this.#xScaleFunc(
             parseDate(d.date)
-          )},${this.#yScaleFunc(d.long) - this.#candleWidth * 1.2}`
+          )},${this.#yScaleFunc(d.long) - this.#candleWidth / 1.5}`
       )
       .attr('fill', this.#colors.long)
       .attr('stroke', this.#colors.longStroke)
@@ -631,8 +631,10 @@ class CandleStickChart {
   }
 
   #handleResetZoom() {
-    this.#zoomRange1 = this.#minMaxDate[0].getTime() - this.#candleWidthDate / 2;
-    this.#zoomRange2 = this.#minMaxDate[1].getTime() + this.#candleWidthDate / 2;
+    this.#zoomRange1 =
+      this.#minMaxDate[0].getTime() - this.#candleWidthDate / 2;
+    this.#zoomRange2 =
+      this.#minMaxDate[1].getTime() + this.#candleWidthDate / 2;
     this.#filteredData = this.data;
     this.#zoomFactor = 1;
     this.draw();
