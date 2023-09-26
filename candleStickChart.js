@@ -15,7 +15,7 @@ class CandleStickChart {
   #candleLockerWidth;
   #candleLockerWidthDate;
   #filteredData;
-  #mode = 'pan';
+  #mode;
   #isMouseDown = false;
   #zoomPoint1;
   #zoomPoint2;
@@ -36,10 +36,12 @@ class CandleStickChart {
     this.#calculateExtendConfigs();
     this.#setObjectIDs();
     let minMaxDate = d3.extent(data.map((x) => parseDate(x.date)));
-    this.#minMaxDate = minMaxDate;
-    this.#zoomRange1 = minMaxDate[0].getTime();
-    this.#zoomRange2 = minMaxDate[1].getTime();
     this.#calculateCandleWidthDate();
+    this.#minMaxDate = minMaxDate;
+    this.#zoomRange1 = minMaxDate[0].getTime() - this.#candleWidthDate / 2;
+    this.#zoomRange2 = minMaxDate[1].getTime() + this.#candleWidthDate / 2;
+    this.#createToolsBtns();
+    this.#modeHandler('pan');
   }
 
   #calculateInfoTextWidth() {
@@ -166,6 +168,7 @@ class CandleStickChart {
     this.#objectIDs.candleInfoIdBackgroundPosition = `bc-candle-info-${randomNumber}-position`;
     this.#objectIDs.zoomBoxId1 = `zoom-box-${randomNumber}-1`;
     this.#objectIDs.zoomBoxId2 = `zoom-box-${randomNumber}-2`;
+    this.#objectIDs.toolsBtnsContainer = `tools-btns-${randomNumber}`;
   }
 
   #createLayout() {
@@ -184,7 +187,8 @@ class CandleStickChart {
       .attr('height', this.#config.svgHeight)
       .style('overflow', 'inherit')
       .style('cursor', 'crosshair')
-      .attr('id', this.#objectIDs.svgId);
+      .attr('id', this.#objectIDs.svgId)
+      .style('margin-top', '-50px');
   }
 
   #createYaxis() {
@@ -498,6 +502,140 @@ class CandleStickChart {
       .attr('fill', this.#colors.tp)
       .attr('stroke', this.#colors.tpStroke)
       .attr('class', 'tp');
+  }
+
+  #createToolsBtns() {
+    d3.select(`#${this.id}`)
+      .selectAll()
+      .data([0])
+      .enter()
+      .append('div')
+      .attr('id', this.#objectIDs.toolsBtnsContainer)
+      .style('display', 'flex')
+      .style('height', '40px')
+      .style('justify-content', 'end')
+      .style('gap', '10px')
+      .style('padding-right', '20px')
+      .style('position', 'relative')
+      .style('z-index', '2');
+
+    d3.select(`#${this.#objectIDs.toolsBtnsContainer}`)
+      .selectAll()
+      .data([0, 1, 2])
+      .enter()
+      .append('div')
+      .attr('id', (d) => `tools-btn-${d}`)
+      .style('width', '24px')
+      .style('height', '24px')
+      .style('border', `1px solid ${this.#colors.deActiveTools}`)
+      .style('border-radius', '4px')
+      .style('cursor', 'pointer')
+      .style('display', 'flex')
+      .style('justify-content', 'center')
+      .style('align-items', 'center');
+
+    document.querySelector(
+      `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-0`
+    ).innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20">
+      <g fill="none" fill-rule="evenodd" stroke="${
+        this.#colors.deActiveTools
+      }" stroke-linecap="round" stroke-linejoin="round" transform="matrix(0 1 1 0 2.5 2.5)">
+      <path d="m3.98652376 1.07807068c-2.38377179 1.38514556-3.98652376 3.96636605-3.98652376 6.92192932 0 4.418278 3.581722 8 8 8s8-3.581722 8-8-3.581722-8-8-8"/>
+      <path d="m4 1v4h-4" transform="matrix(1 0 0 -1 0 6)"/>
+      </g>
+    </svg>`;
+
+    document.querySelector(
+      `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1`
+    ).innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="${
+      this.#colors.deActiveTools
+    }" width="18" height="18" viewBox="2 2 30 30" id="icon">
+      <defs>
+        <style>
+          .cls-1 {
+            fill: none;
+          }
+        </style>
+      </defs>
+      <path d="M31,29.5859l-4.6885-4.6884a8.028,8.028,0,1,0-1.414,1.414L29.5859,31ZM20,26a6,6,0,1,1,6-6A6.0066,6.0066,0,0,1,20,26Z"/>
+      <path d="M8,26H4a2.0021,2.0021,0,0,1-2-2V20H4v4H8Z"/>
+      <rect x="2" y="12" width="2" height="4"/>
+      <path d="M26,8H24V4H20V2h4a2.0021,2.0021,0,0,1,2,2Z"/>
+      <rect x="12" y="2" width="4" height="2"/>
+      <path d="M4,8H2V4A2.0021,2.0021,0,0,1,4,2H8V4H4Z"/>
+      <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" class="cls-1" width="32" height="32"/>
+    </svg>`;
+
+    document.querySelector(
+      `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2`
+    ).innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800px" height="800px" viewBox="0 0 512 512" version="1.1">
+      <title>pan</title>
+      <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+          <g id="drop" fill="${
+            this.#colors.deActiveTools
+          }" transform="translate(42.666667, 42.666667)">
+              <path d="M234.666667,256 L234.666667,341.333333 L277.333333,341.333333 L213.333333,426.666667 L149.333333,341.333333 L192,341.333333 L192,256 L234.666667,256 Z M341.333333,149.333333 L426.666667,213.333333 L341.333333,277.333333 L341.333333,234.666667 L256,234.666667 L256,192 L341.333333,192 L341.333333,149.333333 Z M85.3333333,149.333333 L85.3333333,192 L170.666667,192 L170.666667,234.666667 L85.3333333,234.666667 L85.3333333,277.333333 L3.55271368e-14,213.333333 L85.3333333,149.333333 Z M213.333333,3.55271368e-14 L277.333333,85.3333333 L234.666667,85.3333333 L234.666667,170.666667 L192,170.666667 L192,85.3333333 L149.333333,85.3333333 L213.333333,3.55271368e-14 Z" id="Combined-Shape">
+              </path>
+          </g>
+      </g>
+    </svg>`;
+  }
+
+  #modeHandler(mode) {
+    this.#mode = mode;
+    if (mode === 'pan') {
+      document
+        .querySelector(
+          `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2 svg g g`
+        )
+        .setAttribute('fill', this.#colors.activeTools);
+
+      d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2`).style(
+        'border',
+        `1px solid ${this.#colors.activeTools}`
+      );
+
+      document
+        .querySelector(
+          `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1 svg`
+        )
+        .setAttribute('fill', this.#colors.deActiveTools);
+      d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1`).style(
+        'border',
+        `1px solid ${this.#colors.deActiveTools}`
+      );
+    } else if (mode === 'zoom') {
+      document
+        .querySelector(
+          `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2 svg g g`
+        )
+        .setAttribute('fill', this.#colors.deActiveTools);
+      d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2`).style(
+        'border',
+        `1px solid ${this.#colors.deActiveTools}`
+      );
+
+      document
+        .querySelector(
+          `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1 svg`
+        )
+        .setAttribute('fill', this.#colors.activeTools);
+      d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1`).style(
+        'border',
+        `1px solid ${this.#colors.activeTools}`
+      );
+    }
+  }
+
+  #handleResetZoom() {
+    this.#zoomRange1 = this.#minMaxDate[0].getTime() - this.#candleWidthDate / 2;
+    this.#zoomRange2 = this.#minMaxDate[1].getTime() + this.#candleWidthDate / 2;
+    this.#filteredData = this.data;
+    this.#zoomFactor = 1;
+    this.draw();
   }
 
   #xLineHandler(d, position) {
@@ -833,15 +971,13 @@ class CandleStickChart {
 
   #handlePan(location) {
     let dateWidth = this.#zoomRange2 - this.#zoomRange1;
-    let width = document.getElementById(
-      `${this.#objectIDs.candleContainerId}`
-    ).width.baseVal.value;
+    let width = document.getElementById(`${this.#objectIDs.candleContainerId}`)
+      .width.baseVal.value;
 
     let fraction = location / width;
 
-    let newZoomRange1 = this.#panTargetDate - (fraction * dateWidth);
+    let newZoomRange1 = this.#panTargetDate - fraction * dateWidth;
     let newZoomRange2 = newZoomRange1 + dateWidth;
-
 
     let filteredData = this.data.filter((x) => {
       return (
@@ -854,6 +990,38 @@ class CandleStickChart {
     this.#zoomRange2 = newZoomRange2;
 
     this.#filteredData = filteredData;
+    this.draw();
+  }
+
+  #handleScrollZoom(e) {
+    let location = getCursorPoint(this.#objectIDs.svgId, e.sourceEvent);
+    this.#zoomFactor *= e.transform.k > 1 ? 1.1 : 0.9;
+
+    let width = parseDate(this.#minMaxDate[1]) - parseDate(this.#minMaxDate[0]);
+
+    let newWidth = Math.round(width / this.#zoomFactor);
+
+    let svgWidth = document.getElementById(
+      `${this.#objectIDs.candleContainerId}`
+    ).width.baseVal.value;
+
+    let target = this.#xScaleFunc.invert(location.x).getTime();
+    let coeff = Math.round((newWidth * location.x) / svgWidth);
+    let left = target - coeff;
+    let right = left + newWidth;
+
+    this.#zoomRange1 = left;
+    this.#zoomRange2 = right;
+
+    let filteredData = this.data.filter((x) => {
+      return (
+        parseDate(x.date).getTime() > left - this.#candleWidthDate &&
+        parseDate(x.date).getTime() < right + this.#candleWidthDate
+      );
+    });
+
+    this.#filteredData = filteredData;
+
     this.draw();
   }
 
@@ -970,7 +1138,9 @@ class CandleStickChart {
         if (thisProxy.#mode === 'zoom') {
           thisProxy.#zoomPoint1 = location.x;
         } else if (thisProxy.#mode === 'pan') {
-          thisProxy.#panTargetDate = (thisProxy.#xScaleFunc.invert(location.x)).getTime();
+          thisProxy.#panTargetDate = thisProxy.#xScaleFunc
+            .invert(location.x)
+            .getTime();
         }
       }
     );
@@ -988,6 +1158,37 @@ class CandleStickChart {
         }
       }
     );
+
+    d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1`).on(
+      'click',
+      function (e, d) {
+        thisProxy.#modeHandler('zoom');
+      }
+    );
+    d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2`).on(
+      'click',
+      function (e, d) {
+        thisProxy.#modeHandler('pan');
+      }
+    );
+
+    d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-0`).on(
+      'click',
+      function (e, d) {
+        thisProxy.#handleResetZoom();
+      }
+    );
+
+    let zoom = d3.zoom().on('zoom', function (e) {
+      thisProxy.#handleScrollZoom(e);
+    });
+
+    d3.select(`#${this.#objectIDs.svgId}`)
+      .call(zoom)
+      .on('mousedown.zoom', null)
+      .on('touchstart.zoom', null)
+      .on('touchmove.zoom', null)
+      .on('touchend.zoom', null);
   }
 
   #removeEventListeners() {
@@ -1048,6 +1249,22 @@ class CandleStickChart {
     d3.select(`#${this.#objectIDs.candleContainerId}`).on('mousedown', null);
 
     d3.select(`#${this.#objectIDs.candleContainerId}`).on('mouseup', null);
+
+    d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1`).on(
+      'click',
+      null
+    );
+    d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2`).on(
+      'click',
+      null
+    );
+
+    d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-0`).on(
+      'click',
+      null
+    );
+
+    d3.zoom().on('zoom', null);
   }
 
   setColors(colorObj) {
@@ -1110,46 +1327,6 @@ class CandleStickChart {
     this.#createTakeProfits();
 
     this.#addEvenetListeners();
-
-    let newThis = this;
-    let zoom = d3.zoom().on('zoom', function (e) {
-      let location = getCursorPoint(newThis.#objectIDs.svgId, e.sourceEvent);
-      newThis.#zoomFactor *= e.transform.k > 1 ? 1.1 : 0.9;
-
-      let width =
-        parseDate(newThis.#minMaxDate[1]) - parseDate(newThis.#minMaxDate[0]);
-
-      let newWidth = Math.round(width / newThis.#zoomFactor);
-
-      let svgWidth = document.getElementById(
-        `${newThis.#objectIDs.candleContainerId}`
-      ).width.baseVal.value;
-
-      let target = newThis.#xScaleFunc.invert(location.x).getTime();
-      let coeff = Math.round((newWidth * location.x) / svgWidth);
-      let left = target - coeff;
-      let right = left + newWidth;
-
-      newThis.#zoomRange1 = left;
-      newThis.#zoomRange2 = right;
-
-      let filteredData = newThis.data.filter((x) => {
-        return (
-          parseDate(x.date).getTime() > left - newThis.#candleWidthDate &&
-          parseDate(x.date).getTime() < right + newThis.#candleWidthDate
-        );
-      });
-
-      newThis.#filteredData = filteredData;
-
-      newThis.draw();
-    });
-    d3.select('svg')
-      .call(zoom)
-      .on('mousedown.zoom', null)
-      .on('touchstart.zoom', null)
-      .on('touchmove.zoom', null)
-      .on('touchend.zoom', null);
   }
 }
 

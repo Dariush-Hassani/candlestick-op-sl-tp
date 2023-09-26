@@ -23,6 +23,8 @@ export const colors = () => {
     slStroke: '#F9DB04',
     tp: '#04F5F9',
     tpStroke: '#04F5F9',
+    activeTools: '#04F5F9',
+    deActiveTools: '#ffffff',
   };
 };
 
