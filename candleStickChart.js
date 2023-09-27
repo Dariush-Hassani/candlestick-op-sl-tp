@@ -1281,6 +1281,12 @@ class CandleStickChart {
 
     d3.select(`#${this.#objectIDs.candleContainerId}`).on('mouseup', null);
 
+    d3.select(`#${this.#objectIDs.candleContainerId}`).on('touchstart', null);
+
+    d3.select(`#${this.#objectIDs.candleContainerId}`).on('touchend', null);
+
+    d3.select(`#${this.#objectIDs.candleContainerId}`).on('touchmove', null);
+
     d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1`).on(
       'click',
       null
