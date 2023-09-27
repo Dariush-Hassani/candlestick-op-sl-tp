@@ -192,7 +192,9 @@ class CandleStickChart {
   }
 
   #createYaxis() {
-    let yAxis = d3.axisRight(this.#yScaleFunc).tickSize(this.#config.svgWidth);
+    let yAxis = d3
+      .axisRight(this.#yScaleFunc)
+      .tickSize(this.#config.svgWidth)
     d3.select(`#${this.#objectIDs.svgId}`)
       .append('g')
       .attr('id', this.#objectIDs.yAxisId)
@@ -223,6 +225,7 @@ class CandleStickChart {
   #createXaxis() {
     let xAxis = d3
       .axisBottom(this.#xScaleFunc)
+      .ticks(this.#config.svgWidth / 100)
       .tickSize(this.#config.svgHeight);
 
     d3.select(`#${this.#objectIDs.svgId}`)
@@ -1157,6 +1160,67 @@ class CandleStickChart {
           thisProxy.#zoomPoint2 = 0;
         } else if (thisProxy.#mode === 'pan') {
           thisProxy.#panTargetDate = 0;
+        }
+      }
+    );
+
+    d3.select(`#${this.#objectIDs.candleContainerId}`).on(
+      'touchstart',
+      function (e, d) {
+        thisProxy.#isMouseDown = true;
+        let location = getCursorPoint(thisProxy.#objectIDs.svgId, e);
+        if (thisProxy.#mode === 'zoom') {
+          thisProxy.#zoomPoint1 = location.x;
+        } else if (thisProxy.#mode === 'pan') {
+          thisProxy.#panTargetDate = thisProxy.#xScaleFunc
+            .invert(location.x)
+            .getTime();
+        }
+      }
+    );
+
+    d3.select(`#${this.#objectIDs.candleContainerId}`).on(
+      'touchend',
+      function (e, d) {
+        thisProxy.#isMouseDown = false;
+        if (thisProxy.#mode === 'zoom') {
+          thisProxy.#handleZoom();
+          thisProxy.#zoomPoint1 = 0;
+          thisProxy.#zoomPoint2 = 0;
+        } else if (thisProxy.#mode === 'pan') {
+          thisProxy.#panTargetDate = 0;
+        }
+      }
+    );
+
+    d3.select(`#${this.#objectIDs.candleContainerId}`).on(
+      'touchmove',
+      function (e, d) {
+        let location = getCursorPoint(thisProxy.#objectIDs.svgId, e);
+        if (location.x > thisProxy.#config.width)
+          location.x = thisProxy.#config.width;
+        if (location.y > thisProxy.#config.height)
+          location.y = thisProxy.#config.svgHeight;
+
+        //x line
+        if (!thisProxy.#lockSelectorX) thisProxy.#xLineHandler(d, location.x);
+
+        //y line
+        thisProxy.#yLineHandler(d, location.y);
+
+        //x label
+        if (!thisProxy.#lockSelectorX) {
+          thisProxy.#xLabelHandler(d, location.x);
+        }
+
+        //y label
+        thisProxy.#yLabelHandler(d, location.y);
+
+        if (thisProxy.#isMouseDown && thisProxy.#mode === 'zoom') {
+          thisProxy.#zoomPoint2 = location.x;
+          thisProxy.#handleZoomBox();
+        } else if (thisProxy.#isMouseDown && thisProxy.#mode === 'pan') {
+          thisProxy.#handlePan(location.x);
         }
       }
     );

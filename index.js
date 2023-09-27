@@ -15,5 +15,4 @@ chart.draw();
 window.addEventListener('resize', () => {
   chart.setConfig({ width: window.innerWidth, height: window.innerHeight });
   chart.draw();
-  chart.x();
 });
