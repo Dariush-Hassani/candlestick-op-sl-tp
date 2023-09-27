@@ -6,13 +6,16 @@ data = data.candles;
 
 let chart = new CandleStickChart(
   window.innerWidth,
-  window.innerHeight,
+  window.innerHeight - 50,
   data,
   'chart1'
 );
 chart.draw();
 
 window.addEventListener('resize', () => {
-  chart.setConfig({ width: window.innerWidth, height: window.innerHeight });
+  chart.setConfig({
+    width: window.innerWidth,
+    height: window.innerHeight - 50,
+  });
   chart.draw();
 });
