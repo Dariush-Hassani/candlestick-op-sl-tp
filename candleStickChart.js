@@ -575,7 +575,7 @@ class CandleStickChart {
     document.querySelector(
       `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2`
     ).innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="800px" height="800px" viewBox="0 0 512 512" version="1.1">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="21" height="21" viewBox="0 0 512 512" version="1.1">
       <title>pan</title>
       <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
           <g id="drop" fill="${
@@ -1031,6 +1031,66 @@ class CandleStickChart {
     this.draw();
   }
 
+  #handleMouseMove(e, d) {
+    let location = getCursorPoint(this.#objectIDs.svgId, e);
+    if (location.x > this.#config.width) location.x = this.#config.width;
+    if (location.y > this.#config.height) location.y = this.#config.svgHeight;
+
+    //x line
+    if (!this.#lockSelectorX) this.#xLineHandler(d, location.x);
+
+    //y line
+    this.#yLineHandler(d, location.y);
+
+    //x label
+    if (!this.#lockSelectorX) {
+      this.#xLabelHandler(d, location.x);
+    }
+
+    //y label
+    this.#yLabelHandler(d, location.y);
+
+    if (this.#isMouseDown && this.#mode === 'zoom') {
+      this.#zoomPoint2 = location.x;
+      this.#handleZoomBox();
+    } else if (this.#isMouseDown && this.#mode === 'pan') {
+      this.#handlePan(location.x);
+    }
+  }
+
+  #handleMouseLeave() {
+    let xLine = document.getElementById(this.#objectIDs.xLineSelectorId);
+    let yLine = document.getElementById(this.#objectIDs.yLineSelectorId);
+    let xLabel = document.getElementById(this.#objectIDs.xLabelSelectorId);
+    let yLabel = document.getElementById(this.#objectIDs.yLabelSelectorId);
+
+    if (xLine) xLine.remove();
+    if (yLine) yLine.remove();
+    if (xLabel) xLabel.remove();
+    if (yLabel) yLabel.remove();
+  }
+
+  #handleMouseDown(e) {
+    this.#isMouseDown = true;
+    let location = getCursorPoint(this.#objectIDs.svgId, e);
+    if (this.#mode === 'zoom') {
+      this.#zoomPoint1 = location.x;
+    } else if (this.#mode === 'pan') {
+      this.#panTargetDate = this.#xScaleFunc.invert(location.x).getTime();
+    }
+  }
+
+  #handleMouseUp() {
+    this.#isMouseDown = false;
+    if (this.#mode === 'zoom') {
+      this.#handleZoom();
+      this.#zoomPoint1 = 0;
+      this.#zoomPoint2 = 0;
+    } else if (this.#mode === 'pan') {
+      this.#panTargetDate = 0;
+    }
+  }
+
   #addEvenetListeners() {
     let thisProxy = this;
     d3.selectAll(`#${this.#objectIDs.candleContainerId} .candle`)
@@ -1084,145 +1144,49 @@ class CandleStickChart {
     d3.select(`#${this.#objectIDs.candleContainerId}`).on(
       'mousemove',
       function (e, d) {
-        let location = getCursorPoint(thisProxy.#objectIDs.svgId, e);
-        if (location.x > thisProxy.#config.width)
-          location.x = thisProxy.#config.width;
-        if (location.y > thisProxy.#config.height)
-          location.y = thisProxy.#config.svgHeight;
-
-        //x line
-        if (!thisProxy.#lockSelectorX) thisProxy.#xLineHandler(d, location.x);
-
-        //y line
-        thisProxy.#yLineHandler(d, location.y);
-
-        //x label
-        if (!thisProxy.#lockSelectorX) {
-          thisProxy.#xLabelHandler(d, location.x);
-        }
-
-        //y label
-        thisProxy.#yLabelHandler(d, location.y);
-
-        if (thisProxy.#isMouseDown && thisProxy.#mode === 'zoom') {
-          thisProxy.#zoomPoint2 = location.x;
-          thisProxy.#handleZoomBox();
-        } else if (thisProxy.#isMouseDown && thisProxy.#mode === 'pan') {
-          thisProxy.#handlePan(location.x);
-        }
+        thisProxy.#handleMouseMove(e, d);
       }
     );
 
     d3.select(`#${this.#objectIDs.candleContainerId}`).on(
       'mouseleave',
       function (e, d) {
-        let xLine = document.getElementById(
-          thisProxy.#objectIDs.xLineSelectorId
-        );
-        let yLine = document.getElementById(
-          thisProxy.#objectIDs.yLineSelectorId
-        );
-        let xLabel = document.getElementById(
-          thisProxy.#objectIDs.xLabelSelectorId
-        );
-        let yLabel = document.getElementById(
-          thisProxy.#objectIDs.yLabelSelectorId
-        );
-
-        if (xLine) xLine.remove();
-        if (yLine) yLine.remove();
-        if (xLabel) xLabel.remove();
-        if (yLabel) yLabel.remove();
+        thisProxy.#handleMouseLeave();
       }
     );
 
     d3.select(`#${this.#objectIDs.candleContainerId}`).on(
       'mousedown',
       function (e, d) {
-        thisProxy.#isMouseDown = true;
-        let location = getCursorPoint(thisProxy.#objectIDs.svgId, e);
-        if (thisProxy.#mode === 'zoom') {
-          thisProxy.#zoomPoint1 = location.x;
-        } else if (thisProxy.#mode === 'pan') {
-          thisProxy.#panTargetDate = thisProxy.#xScaleFunc
-            .invert(location.x)
-            .getTime();
-        }
+        thisProxy.#handleMouseDown(e);
       }
     );
 
     d3.select(`#${this.#objectIDs.candleContainerId}`).on(
       'mouseup',
       function (e, d) {
-        thisProxy.#isMouseDown = false;
-        if (thisProxy.#mode === 'zoom') {
-          thisProxy.#handleZoom();
-          thisProxy.#zoomPoint1 = 0;
-          thisProxy.#zoomPoint2 = 0;
-        } else if (thisProxy.#mode === 'pan') {
-          thisProxy.#panTargetDate = 0;
-        }
+        thisProxy.#handleMouseUp();
       }
     );
 
     d3.select(`#${this.#objectIDs.candleContainerId}`).on(
       'touchstart',
       function (e, d) {
-        thisProxy.#isMouseDown = true;
-        let location = getCursorPoint(thisProxy.#objectIDs.svgId, e);
-        if (thisProxy.#mode === 'zoom') {
-          thisProxy.#zoomPoint1 = location.x;
-        } else if (thisProxy.#mode === 'pan') {
-          thisProxy.#panTargetDate = thisProxy.#xScaleFunc
-            .invert(location.x)
-            .getTime();
-        }
+        thisProxy.#handleMouseDown(e);
       }
     );
 
     d3.select(`#${this.#objectIDs.candleContainerId}`).on(
       'touchend',
       function (e, d) {
-        thisProxy.#isMouseDown = false;
-        if (thisProxy.#mode === 'zoom') {
-          thisProxy.#handleZoom();
-          thisProxy.#zoomPoint1 = 0;
-          thisProxy.#zoomPoint2 = 0;
-        } else if (thisProxy.#mode === 'pan') {
-          thisProxy.#panTargetDate = 0;
-        }
+        thisProxy.#handleMouseUp();
       }
     );
 
     d3.select(`#${this.#objectIDs.candleContainerId}`).on(
       'touchmove',
       function (e, d) {
-        let location = getCursorPoint(thisProxy.#objectIDs.svgId, e);
-        if (location.x > thisProxy.#config.width)
-          location.x = thisProxy.#config.width;
-        if (location.y > thisProxy.#config.height)
-          location.y = thisProxy.#config.svgHeight;
-
-        //x line
-        if (!thisProxy.#lockSelectorX) thisProxy.#xLineHandler(d, location.x);
-
-        //y line
-        thisProxy.#yLineHandler(d, location.y);
-
-        //x label
-        if (!thisProxy.#lockSelectorX) {
-          thisProxy.#xLabelHandler(d, location.x);
-        }
-
-        //y label
-        thisProxy.#yLabelHandler(d, location.y);
-
-        if (thisProxy.#isMouseDown && thisProxy.#mode === 'zoom') {
-          thisProxy.#zoomPoint2 = location.x;
-          thisProxy.#handleZoomBox();
-        } else if (thisProxy.#isMouseDown && thisProxy.#mode === 'pan') {
-          thisProxy.#handlePan(location.x);
-        }
+        thisProxy.#handleMouseMove(e, d);
       }
     );
 
