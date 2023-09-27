@@ -48,6 +48,7 @@ export const config = (width, height) => {
     charWidth: 7.8,
     selectoreStrokeDashArray: '2,2',
     timeFormat: "%a %d %b '%y %H:%M",
+    mobileBreakPoint:600,
     //calcualte after set data//
     infoTextWidth: undefined,
     infoTextWidthMeta: undefined,

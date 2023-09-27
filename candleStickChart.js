@@ -192,9 +192,7 @@ class CandleStickChart {
   }
 
   #createYaxis() {
-    let yAxis = d3
-      .axisRight(this.#yScaleFunc)
-      .tickSize(this.#config.svgWidth)
+    let yAxis = d3.axisRight(this.#yScaleFunc).tickSize(this.#config.svgWidth);
     d3.select(`#${this.#objectIDs.svgId}`)
       .append('g')
       .attr('id', this.#objectIDs.yAxisId)
@@ -258,8 +256,8 @@ class CandleStickChart {
     d3.select(`#${this.#objectIDs.svgId}`)
       .append('rect')
       .attr('id', this.#objectIDs.candleInfoIdBackground)
-      .attr('x', 20)
-      .attr('y', 10)
+      .attr('x', window.innerWidth > this.#config.mobileBreakPoint ? 20 : 0)
+      .attr('y', window.innerWidth > this.#config.mobileBreakPoint ? 10 : 50)
       .attr('width', this.#config.infoTextWidth)
       .attr('height', 14)
       .attr('fill', this.#colors.background)
@@ -270,15 +268,15 @@ class CandleStickChart {
       .attr('id', this.#objectIDs.candleInfoId)
       .style('font-size', '14px')
       .style('font-family', 'monospace')
-      .attr('x', 20)
-      .attr('y', 20)
+      .attr('x', window.innerWidth > this.#config.mobileBreakPoint ? 20 : 0)
+      .attr('y', window.innerWidth > this.#config.mobileBreakPoint ? 20 : 60)
       .style('fill', this.#colors.candleInfoText);
 
     d3.select(`#${this.#objectIDs.svgId}`)
       .append('rect')
       .attr('id', this.#objectIDs.candleInfoIdBackgroundPosition)
-      .attr('x', 20)
-      .attr('y', 30)
+      .attr('x', window.innerWidth > this.#config.mobileBreakPoint ? 20 : 0)
+      .attr('y', window.innerWidth > this.#config.mobileBreakPoint ? 30 : 70)
       .attr('width', this.#config.infoTextWidthMeta)
       .attr('height', 14)
       .attr('fill', this.#colors.background)
@@ -289,8 +287,8 @@ class CandleStickChart {
       .attr('id', this.#objectIDs.candleInfoIdPosition)
       .style('font-size', '14px')
       .style('font-family', 'monospace')
-      .attr('x', 20)
-      .attr('y', 40)
+      .attr('x', window.innerWidth > this.#config.mobileBreakPoint ? 20 : 0)
+      .attr('y', window.innerWidth > this.#config.mobileBreakPoint ? 40 : 80)
       .style('fill', this.#colors.candleInfoText);
   }
   #createLockerGroup() {
@@ -518,7 +516,10 @@ class CandleStickChart {
       .style('height', '40px')
       .style('justify-content', 'end')
       .style('gap', '10px')
-      .style('padding-right', '20px')
+      .style(
+        'padding-right',
+        window.innerWidth > this.#config.mobileBreakPoint ? '20px' : '0'
+      )
       .style('position', 'relative')
       .style('z-index', '2');
 
